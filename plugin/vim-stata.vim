@@ -51,7 +51,13 @@
 "          tested)
 "==============================================================================
 
-
+function! RunDoSel()
+	let cmd = getline('.')
+	let cmd = substitute(cmd, "\\", '\\\', 'g')
+	let cmd = substitute(cmd, '"', '\\"', "g")
+	let cmd = substitute(cmd, "'", "'\\\\''", "g")
+	call system("osascript -e 'tell application \"StataSE\" to DoCommandAsync \"" . cmd . "\"'")
+endfunction
  
 fun! RunDoLines()
 let selectedLines = getbufline('%', line("'<"), line("'>"))
@@ -70,13 +76,15 @@ import os
 def run_yan(): 
     temp_dofile = vim.eval("temp_dofile")
     print(temp_dofile)  
-    cmd = """osascript -e 'tell application "Finder" to open POSIX file "{0}"' -e 'tell application "{1}" to activate' &""".format(temp_dofile, "MacVim") 
+    cmd = """osascript -e 'tell application "Finder" to open POSIX file "{0}"' -e 'tell application "{1}" to activate' &""".format(temp_dofile, "iTerm") 
     os.system(cmd) 
 run_yan()
 EOF
 endfun
-
+    
 noremap  <Plug>(RunDoLines)            :<C-U>call RunDoLines()<CR><CR>
+noremap  <Plug>(RunDoSel)            :<C-U>call RunDoSel()<CR><CR>
 map  <buffer> <silent> <F9>          <Plug>(RunDoLines)
+map ✠ <Plug>(RunDoSel)
 "command! Vim2StataToggle call RunDoLines()<CR><CR>
  
