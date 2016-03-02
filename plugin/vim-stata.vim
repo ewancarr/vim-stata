@@ -51,47 +51,74 @@
 "          tested)
 "==============================================================================
 
-function! RunEntireFile()
-	call system("open " . shellescape(expand('%:p')))
-endfunction
+" fun! RunIt()
+"   w
+"   "adjust this path to the bash script
+"   !sh "/home/ewan/.rundo.sh" "%:p"
+" endfun
+" au FileType stata noremap <F8> :<C-U>call RunIt()<CR><CR>
 
-function! RunDoSel()
-	let cmd = getline('.')
-	let cmd = substitute(cmd, "\\", '\\\', 'g')
-	let cmd = substitute(cmd, '"', '\\"', "g")
-	let cmd = substitute(cmd, "'", "'\\\\''", "g")
-	call system("osascript -e 'tell application \"StataSE\" to DoCommandAsync \"" . cmd . "\"'")
-endfunction
- 
-fun! RunDoLines()
-let selectedLines = getbufline('%', line("'<"), line("'>"))
-if col("'>") < strlen(getline(line("'>")))
-let selectedLines[-1] = strpart(selectedLines[-1], 0, col("'>"))
-endif
-if col("'<") != 1
-let selectedLines[0] = strpart(selectedLines[0], col("'<")-1)
-endif
-let temp_dofile = tempname() . ".do"  
-call writefile(selectedLines, temp_dofile)
-python << EOF
-import vim
-import sys
-import os  
-def run_yan(): 
-    temp_dofile = vim.eval("temp_dofile")
-    print(temp_dofile)  
-    cmd = """osascript -e 'tell application "Finder" to open POSIX file "{0}"' -e 'tell application "{1}" to activate' &""".format(temp_dofile, "MacVim") 
-    os.system(cmd) 
-run_yan()
-EOF
+fun! RunDoLinesStata()
+	let selectedLines = getbufline('%', line("'<"), line("'>"))
+	if col("'>") < strlen(getline(line("'>")))
+		let selectedLines[-1] = strpart(selectedLines[-1], 0, col("'>"))
+	endif
+	if col("'<") != 1
+		let selectedLines[0] = strpart(selectedLines[0], col("'<")-1)
+	endif
+ let temp_dofile = tempname() . ".do"
+ call writefile(selectedLines, temp_dofile)
+ let cmd = "~/.vim/bundle/vim-stata/plugin/.rundo.sh ".temp_dofile
+ call system(cmd)
+"  au VimLeave * exe "!del -y" temp
+    " au VimLeave * silent exe '!del /Q "'.$TEMP.'\*.tmp.do"'
 endfun
-    
-noremap  <Plug>(RunDoLines):    <C-U>call RunDoLines()<CR><CR>
-noremap  <Plug>(RunEntireFile): <C-U>call RunEntireFile()<CR><CR>
-noremap  <Plug>(RunDoSel):      <C-U>call RunDoSel()<CR><CR>
+au FileType stata noremap <leader>r :<C-U>call RunDoLinesStata()<CR><CR> 
 
-map  <buffer> <silent> <F9>          <Plug>(RunDoLines)
-map <D-r> <Plug>(RunDoSel)
-map <leader>bb <Plug>(RunEntireFile)
-"command! Vim2StataToggle call RunDoLines()<CR><CR>
- 
+
+
+
+" function! RunEntireFile()
+" 	call system("open " . shellescape(expand('%:p')))
+" endfunction
+"
+" function! RunDoSel()
+" 	let cmd = getline('.')
+" 	let cmd = substitute(cmd, "\\", '\\\', 'g')
+" 	let cmd = substitute(cmd, '"', '\\"', "g")
+" 	let cmd = substitute(cmd, "'", "'\\\\''", "g")
+" 	call system("osascript -e 'tell application \"StataSE\" to DoCommandAsync \"" . cmd . "\"'")
+" endfunction
+"  
+" fun! RunDoLines()
+" let selectedLines = getbufline('%', line("'<"), line("'>"))
+" if col("'>") < strlen(getline(line("'>")))
+" let selectedLines[-1] = strpart(selectedLines[-1], 0, col("'>"))
+" endif
+" if col("'<") != 1
+" let selectedLines[0] = strpart(selectedLines[0], col("'<")-1)
+" endif
+" let temp_dofile = tempname() . ".do"  
+" call writefile(selectedLines, temp_dofile)
+" python << EOF
+" import vim
+" import sys
+" import os  
+" def run_yan(): 
+"     temp_dofile = vim.eval("temp_dofile")
+"     print(temp_dofile)  
+"     cmd = """osascript -e 'tell application "Finder" to open POSIX file "{0}"' -e 'tell application "{1}" to activate' &""".format(temp_dofile, "MacVim") 
+"     os.system(cmd) 
+" run_yan()
+" EOF
+" endfun
+"     
+" noremap  <Plug>(RunDoLines):    <C-U>call RunDoLines()<CR><CR>
+" noremap  <Plug>(RunEntireFile): <C-U>call RunEntireFile()<CR><CR>
+" noremap  <Plug>(RunDoSel):      <C-U>call RunDoSel()<CR><CR>
+"
+" map  <buffer> <silent> <F9>          <Plug>(RunDoLines)
+" map <D-r> <Plug>(RunDoSel)
+" map <leader>bb <Plug>(RunEntireFile)
+" "command! Vim2StataToggle call RunDoLines()<CR><CR>
+"  
